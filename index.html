@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>deepClone</title>
+	<style type="text/css">
+
+	</style>
+</head>
+<body>
+	
+</body>
+<script type="text/javascript">
+var person =  function(pname) {
+    this.name = pname;
+    this.arr = [1,2];
+};
+
+var say = function(){
+    console.log('test');
+};
+
+var Messi = new person('Messi');
+var Kate = new person('Kate');
+var oldObj = {
+    a: say,
+    b: [['a','b','c'],10,20,30,Kate],
+    c: new RegExp('ab+c', 'i'),
+    d: Messi
+};
+var newObj=deepClone(oldObj);
+console.log(newObj.a, oldObj.a,newObj.a===oldObj.a); //[Function: say] [Function: say]
+console.log(newObj.b[0], oldObj.b[0],newObj.b[0]===oldObj.b[0]);
+console.log(newObj.b, oldObj.b,newObj.b===oldObj.b);
+console.log(newObj.b[4].arr, oldObj.b[4].arr,newObj.b[4].arr===oldObj.b[4].arr);
+console.log(newObj.c, oldObj.c); // /ab+c/i /ab+c/i
+console.log(newObj.d.constructor, oldObj.d.constructor); // [Function: person][Function: person]
+console.log(newObj.d.arr === oldObj.d.arr); // [Function: person][Function: person]
+
+
+function deepClone(obj,newObj){
+
+	function getType(obj){
+		var map = {
+			'[object Boolean]':'boolean',
+			'[object Number]':'number',
+			'[object String]':'string',
+			'[object Function]':'function',
+			'[object Array]':'array',
+			'[object Date]':'date',
+			'[object RegExp]':'regExp',
+			'[object Undefined]':'undefined',
+			'[object Null]':'null',
+			'[object Object]':'object',
+			'[object Symbol]':'symbol'
+		}
+		if(obj instanceof Element){
+			return 'element';
+		}
+		return map[Object.prototype.toString.call(obj)];
+	}
+	function getRegExp(re){
+		var flags="";
+		if(re.global)flags +='g';
+		if(re.ignoreCase)flags +='i';
+		if(re.multiline)flags +='m';
+		return flags;
+	}
+	function clone(oldObj,newObj){
+		switch(getType(oldObj)){
+			case 'object':{
+			    newObj = Object.create(Object.getPrototypeOf(oldObj));
+			    break;
+			}
+			case 'symbol':{
+			    return Symbol(Symbol.keyFor(oldObj).toString());
+			    break;
+			}
+			case 'array':{
+				newObj=oldObj.map(function(item,index,arr){
+					return clone(item);
+				});
+			    break;
+			}
+			case 'regExp':{
+			    newObj = new RegExp(oldObj.source, getRegExp(oldObj));
+			    if(oldObj.lastIndex) newObj.lastIndex = oldObj.lastIndex;
+			    break;
+			}
+			case 'date':{
+			    newObj = new Date(oldObj.getTime());
+			    break;
+			}
+			// case 'boolean':
+			// case 'number':
+			// case 'string':
+			// case 'null':
+			// case 'undefined':
+			// case 'function':{
+			//     return oldObj;
+			//     break;
+			// }
+			default:{
+			    return oldObj;
+			    break;
+			}
+		}
+		for (var i in oldObj) {// 递归
+			newObj[i] = clone(oldObj[i],newObj);
+		}
+		return newObj;
+	}
+	return clone(obj,newObj);
+}
+</script>
+</html>
